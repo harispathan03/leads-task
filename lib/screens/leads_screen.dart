@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/state_manager.dart';
 import 'package:leads_task/model/lead.dart';
+import 'package:leads_task/widget/common_textfield.dart';
 
 import '../controllers/leads_controller.dart';
 import '../routes.dart';
@@ -17,32 +18,58 @@ class LeadsScreen extends GetView<LeadsController> {
         title: Text("Leads", style: TextStyle(color: Colors.white),),
         backgroundColor: AppColors.primaryColor,
       ),
-      body: Obx(() => controller.leads.isEmpty ? const Center(child: Text("No Leads Found", style: TextStyle(fontSize: 20),),) : Padding(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: ListView.builder(itemCount: controller.leads.length, itemBuilder: (context, index) {
-          Lead lead = controller.leads[index];
-          return Container(
-            padding: EdgeInsets.symmetric(horizontal: 12,vertical: 10),
-            margin: EdgeInsets.only(bottom: 10),
-            decoration: BoxDecoration(
-              color: AppColors.primaryColor.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
+      body: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: CommonTextfield(
+              controller: controller.searchController,
+              hintText: "Search",
+              onChange: (query) {
+                if (query.trim().isEmpty) {
+                  controller.leads.value = controller.mainleads;
+                  return;
+                }
+                controller.search.value = query.toLowerCase();
+                controller.leads.value = controller.mainleads.where((lead) {
+                  return lead.name.toLowerCase().contains(query) ||
+                      lead.email.toLowerCase().contains(query) ||
+                      lead.phone.toLowerCase().contains(query) ||
+                      lead.service.toLowerCase().contains(query);
+                }).toList();
+              },
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CommonDetailRow(title: "Name", value: lead.name),
-                SizedBox(height: 4,),
-                CommonDetailRow(title: "Email", value: lead.email),
-                SizedBox(height: 4,),
-                CommonDetailRow(title: "Phone", value: lead.phone),
-                SizedBox(height: 4,),
-                CommonDetailRow(title: "Service", value: lead.service),
-              ],
-            ),
-          );
-        },)
-      )),
+          ),
+          Expanded(
+            child: Obx(() => controller.leads.isEmpty ? const Center(child: Text("No Leads Found", style: TextStyle(fontSize: 20),),) : Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: ListView.builder(itemCount: controller.leads.length, itemBuilder: (context, index) {
+                Lead lead = controller.leads[index];
+                return Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12,vertical: 10),
+                  margin: EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CommonDetailRow(title: "Name", value: lead.name),
+                      SizedBox(height: 4,),
+                      CommonDetailRow(title: "Email", value: lead.email),
+                      SizedBox(height: 4,),
+                      CommonDetailRow(title: "Phone", value: lead.phone),
+                      SizedBox(height: 4,),
+                      CommonDetailRow(title: "Service", value: lead.service),
+                    ],
+                  ),
+                );
+              },)
+            )),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(onPressed: () {
         Get.toNamed(RouteName.addLead);
       }, backgroundColor: AppColors.primaryColor, child: const Icon(Icons.add, color: Colors.white,)));
